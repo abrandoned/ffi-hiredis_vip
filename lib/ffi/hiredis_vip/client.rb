@@ -106,7 +106,7 @@ module FFI
           reply = ::FFI::HiredisVip::Core.command(connection, "PING")
 
           case reply[:type] 
-          when :REDIS_REPLY_STRING
+          when :REDIS_REPLY_STATUS
             reply[:str] == PONG
           else
             false
