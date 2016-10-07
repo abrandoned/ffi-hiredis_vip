@@ -6,6 +6,9 @@ module FFI
     class Client
       include MonitorMixin
 
+      OK = "OK"
+      PONG = "PONG"
+
       def initialize(address, port)
         @connection = ::FFI::HiredisVip::Core.connect(address, port)
 
@@ -94,13 +97,17 @@ module FFI
         end
       end
 
+      def exists?(key)
+        exists(key) == 1
+      end
+
       def ping
         synchronize do |connection|
           reply = ::FFI::HiredisVip::Core.command(connection, "PING")
 
           case reply[:type] 
           when :REDIS_REPLY_STRING
-            reply[:str] == "PONG"
+            reply[:str] == PONG
           else
             false
           end
@@ -112,12 +119,10 @@ module FFI
           reply = ::FFI::HiredisVip::Core.command(connection, "SET %b %b", :string, key, :size_t, key.size, :string, value, :size_t, value.size)
 
           case reply[:type] 
-          when :REDIS_REPLY_NIL
-            false
-          when :REDIS_REPLY_ERROR
-            false
+          when :REDIS_REPLY_STATUS
+            reply[:str] == OK
           else
-            true
+            false
           end
         end
       end
