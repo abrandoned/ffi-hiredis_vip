@@ -29,7 +29,8 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "ffi"
+  spec.add_runtime_dependency "ffi"
+  spec.add_runtime_dependency "ffi-hiredis_vip-core", ">= 0.1.0.pre"
 
   spec.add_development_dependency "bundler", "~> 1.13"
   spec.add_development_dependency "rake", "~> 10.0"
