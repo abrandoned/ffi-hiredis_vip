@@ -71,7 +71,7 @@ module FFI
       end
 
       def exists(*keys)
-        @exists_provider.exists(keys)
+        @exists_provider.exists(*keys)
       end
 
       def exists?(key)
