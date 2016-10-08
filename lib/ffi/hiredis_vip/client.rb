@@ -1,4 +1,7 @@
 require 'ffi/hiredis_vip'
+require 'ffi/hiredis_vip/info'
+require 'ffi/hiredis_vip/exists'
+require 'ffi/hiredis_vip/exists3'
 require 'monitor'
 
 module FFI
@@ -13,6 +16,8 @@ module FFI
         @connection = ::FFI::HiredisVip::Core.connect(address, port)
 
         super() # MonitorMixin#initialize
+
+        set_exists_provider # Changed in Redis3
       end
 
       def synchronize
@@ -20,6 +25,7 @@ module FFI
       end
 
       def del(*keys)
+        keys = keys.flatten
         key_size_pairs = []
         number_of_deletes = keys.size
         keys.each do |key|
@@ -64,6 +70,14 @@ module FFI
         end
       end
 
+      def exists(*keys)
+        @exists_provider.exists(keys)
+      end
+
+      def exists?(key)
+        exists(key) == 1
+      end
+
       def get(key)
         synchronize do |connection|
           reply = ::FFI::HiredisVip::Core.command(connection, "GET %b", :string, key, :size_t, key.size)
@@ -78,27 +92,17 @@ module FFI
       end
       alias_method :[], :get
 
-      def exists(*keys)
-        key_size_pairs = []
-        number_of_exists = keys.size
-        keys.each do |key|
-          key_size_pairs << :string << key << :size_t << key.size
-        end
-
+      def info
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, "EXISTS#{' %b' * number_of_exists}", *key_size_pairs)
+          reply = ::FFI::HiredisVip::Core.command(connection, "INFO")
 
           case reply[:type] 
-          when :REDIS_REPLY_INTEGER
-            reply[:integer]
+          when :REDIS_REPLY_STRING
+            reply[:str]
           else
-            0
+            ""
           end
         end
-      end
-
-      def exists?(key)
-        exists(key) == 1
       end
 
       def ping
@@ -140,6 +144,29 @@ module FFI
           end
         end
       end
-    end
-  end
-end
+
+      private
+
+      def redis_info_parsed
+        @redis_info_parsed ||= ::FFI::HiredisVip::Info.new(info)
+      end
+
+      def redis_version_2?
+        redis_info_parsed["redis_version"] && redis_info_parsed["redis_version"].start_with?("2")
+      end
+
+      def redis_version_3?
+        redis_info_parsed["redis_version"] && redis_info_parsed["redis_version"].start_with?("3")
+      end
+
+      def set_exists_provider
+        @exists_provider = case
+                           when redis_version_3?
+                             ::FFI::HiredisVip::Exists3.new(self)
+                           else
+                             ::FFI::HiredisVip::Exists.new(self)
+                           end
+      end
+    end # class Client
+  end # module HiredisVip
+end # module FFI
