@@ -6,8 +6,8 @@ require 'ffi/hiredis_vip/sadd'
 require 'ffi/hiredis_vip/sadd_before_2_4'
 require 'ffi/hiredis_vip/scan'
 require 'ffi/hiredis_vip/scan_before_2_8'
-#require 'ffi/hiredis_vip/sscan'
-#require 'ffi/hiredis_vip/sscan_before_2_8'
+require 'ffi/hiredis_vip/sscan'
+require 'ffi/hiredis_vip/sscan_before_2_8'
 require 'monitor'
 
 module FFI
@@ -26,7 +26,7 @@ module FFI
         set_exists_provider # Changed in Redis3
         set_sadd_provider # Changed in Redis2.4
         set_scan_provider # Introduced in Redis2.8
-        #set_sscan_provider # Introduced in Redis2.8
+        set_sscan_provider # Introduced in Redis2.8
       end
 
       def synchronize
@@ -166,6 +166,17 @@ module FFI
 
       def sscan(key, cursor, options = {})
         @sscan_provider.sscan(key, cursor, options)
+      end
+
+      def sscan_each(key, options = {}, &block)
+        return to_enum(:sscan_each, key, options) unless block_given?
+
+        cursor = "0"
+        loop do
+          cursor, values = sscan(key, cursor, options)
+          values.each(&block)
+          break if cursor == "0"
+        end
       end
 
       def set(key, value)
