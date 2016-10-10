@@ -2,6 +2,8 @@ require 'ffi/hiredis_vip'
 require 'ffi/hiredis_vip/info'
 require 'ffi/hiredis_vip/exists'
 require 'ffi/hiredis_vip/exists3'
+require 'ffi/hiredis_vip/sadd'
+require 'ffi/hiredis_vip/sadd_before_2_4'
 require 'monitor'
 
 module FFI
@@ -18,6 +20,7 @@ module FFI
         super() # MonitorMixin#initialize
 
         set_exists_provider # Changed in Redis3
+        set_sadd_provider # Changed in Redis2.4
       end
 
       def synchronize
@@ -118,6 +121,10 @@ module FFI
         end
       end
 
+      def sadd(key, *values)
+        @sadd_provider.sadd(key, *values)
+      end
+
       def set(key, value)
         synchronize do |connection|
           reply = ::FFI::HiredisVip::Core.command(connection, "SET %b %b", :string, key, :size_t, key.size, :string, value, :size_t, value.size)
@@ -159,6 +166,10 @@ module FFI
         redis_info_parsed["redis_version"] && redis_info_parsed["redis_version"].start_with?("3")
       end
 
+      def redis_version_greater_than_2_4?
+        redis_info_parsed["redis_version"] && ::Gem::Version.new(redis_info_parsed["redis_version"]) >= ::Gem::Version.new("2.4.0")
+      end
+
       def set_exists_provider
         @exists_provider = case
                            when redis_version_3?
@@ -166,6 +177,15 @@ module FFI
                            else
                              ::FFI::HiredisVip::Exists.new(self)
                            end
+      end
+
+      def set_sadd_provider
+        @sadd_provider = case
+                         when redis_version_greater_than_2_4?
+                           ::FFI::HiredisVip::Sadd.new(self)
+                         else
+                           ::FFI::HiredisVip::SaddBefore24.new(self)
+                         end
       end
     end # class Client
   end # module HiredisVip
