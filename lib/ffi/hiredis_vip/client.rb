@@ -204,15 +204,16 @@ module FFI
       alias_method :[]=, :set
 
       def ttl(key)
+        reply = nil
         synchronize do |connection|
           reply = ::FFI::HiredisVip::Core.command(connection, "TTL %b", :string, key, :size_t, key.size)
+        end
 
-          case reply[:type] 
-          when :REDIS_REPLY_INTEGER
-            reply[:integer]
-          else
-            0
-          end
+        return nil if reply.nil? || reply.null?
+
+        case reply[:type] 
+        when :REDIS_REPLY_INTEGER
+          reply[:integer]
         end
       end
 

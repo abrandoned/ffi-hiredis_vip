@@ -18,6 +18,7 @@ describe ::FFI::HiredisVip::Client do
     it "returns true when key is present and expire is able to be set" do
       @client.set("something", "something")
       @client.expire("something", 10).must_equal true
+      @client.ttl("something").must_equal 10
     end
   end
 end
