@@ -87,6 +87,16 @@ module FFI
         exists(key) == 1
       end
 
+      def expire(key, seconds)
+        reply = nil
+        time_in_seconds = "#{seconds}"
+        synchronize do |connection|
+          reply = ::FFI::HiredisVip::Core.command(connection, "EXPIRE %b %b", :string, key, :size_t, key.size, :string, time_in_seconds, :size_t, time_in_seconds.size)
+        end
+
+        return !reply.nil? && !reply.null? && reply[:type] == :REDIS_REPLY_INTEGER && reply[:integer] == 1
+      end
+
       def flushall
         reply = nil
         synchronize do |connection|
