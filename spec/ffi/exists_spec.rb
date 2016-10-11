@@ -32,4 +32,15 @@ describe ::FFI::HiredisVip::Client do
       @client.exists("derp", "something", "nothing").must_equal 2
     end
   end
+
+  describe "#exists?" do
+    it "returns false when key is not present" do
+      @client.exists?("derp").must_equal false
+    end
+
+    it "returns true when single key is present" do
+      @client.set("something", "something")
+      @client.exists?("something").must_equal true
+    end
+  end
 end

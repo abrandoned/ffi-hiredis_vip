@@ -4,6 +4,10 @@ require 'ffi/hiredis_vip/exists'
 require 'ffi/hiredis_vip/exists3'
 require 'ffi/hiredis_vip/sadd'
 require 'ffi/hiredis_vip/sadd_before_2_4'
+require 'ffi/hiredis_vip/scan'
+require 'ffi/hiredis_vip/scan_before_2_8'
+require 'ffi/hiredis_vip/sscan'
+require 'ffi/hiredis_vip/sscan_before_2_8'
 require 'monitor'
 
 module FFI
@@ -21,13 +25,30 @@ module FFI
 
         set_exists_provider # Changed in Redis3
         set_sadd_provider # Changed in Redis2.4
+        set_scan_provider # Introduced in Redis2.8
+        set_sscan_provider # Introduced in Redis2.8
       end
 
       def synchronize
         mon_synchronize { yield(@connection) }
       end
 
+      def dbsize
+        reply = nil
+        synchronize do |connection|
+          reply = ::FFI::HiredisVip::Core.command(connection, "DBSIZE")
+        end
+
+        case reply[:type]
+        when :REDIS_REPLY_INTEGER
+          reply[:integer]
+        else
+          0
+        end
+      end
+
       def del(*keys)
+        reply = nil
         keys = keys.flatten
         key_size_pairs = []
         number_of_deletes = keys.size
@@ -37,13 +58,13 @@ module FFI
 
         synchronize do |connection|
           reply = ::FFI::HiredisVip::Core.command(connection, "DEL#{' %b' * number_of_deletes}", *key_size_pairs)
+        end
 
-          case reply[:type] 
-          when :REDIS_REPLY_INTEGER
-            reply[:integer]
-          else
-            0
-          end
+        case reply[:type]
+        when :REDIS_REPLY_INTEGER
+          reply[:integer]
+        else
+          0
         end
       end
 
@@ -79,6 +100,66 @@ module FFI
 
       def exists?(key)
         exists(key) == 1
+      end
+
+      def expire(key, seconds)
+        reply = nil
+        time_in_seconds = "#{seconds}"
+        synchronize do |connection|
+          reply = ::FFI::HiredisVip::Core.command(connection, "EXPIRE %b %b", :string, key, :size_t, key.size, :string, time_in_seconds, :size_t, time_in_seconds.size)
+        end
+
+        return 0 if reply.nil? || reply.null?
+
+        case reply[:type]
+        when :REDIS_REPLY_INTEGER
+          reply[:integer]
+        else
+          0
+        end
+      end
+
+      def expire?(key, seconds)
+        expire(key, seconds) == 1
+      end
+
+      def expireat(key, unix_time)
+        reply = nil
+        epoch = "#{unix_time}"
+        synchronize do |connection|
+          reply = ::FFI::HiredisVip::Core.command(connection, "EXPIREAT %b %b", :string, key, :size_t, key.size, :string, epoch, :size_t, epoch.size)
+        end
+
+        return 0 if reply.nil? || reply.null?
+
+        case reply[:type]
+        when :REDIS_REPLY_INTEGER
+          reply[:integer]
+        else
+          0
+        end
+      end
+
+      def expireat?(key, unix_time)
+        expireat(key, unix_time) == 1
+      end
+
+      def flushall
+        reply = nil
+        synchronize do |connection|
+          reply = ::FFI::HiredisVip::Core.command(connection, "FLUSHALL")
+        end
+
+        return !reply.nil? && !reply.null? && reply[:type] == :REDIS_REPLY_STRING && reply[:str] == OK
+      end
+
+      def flushdb
+        reply = nil
+        synchronize do |connection|
+          reply = ::FFI::HiredisVip::Core.command(connection, "FLUSHDB")
+        end
+
+        return !reply.nil? && !reply.null? && reply[:type] == :REDIS_REPLY_STRING && reply[:str] == OK
       end
 
       def get(key)
@@ -125,6 +206,36 @@ module FFI
         @sadd_provider.sadd(key, *values)
       end
 
+      def scan(cursor, options = {})
+        @scan_provider.scan(cursor, options)
+      end
+
+      def scan_each(options = {}, &block)
+        return to_enum(:scan_each, options) unless block_given?
+
+        cursor = "0"
+        loop do
+          cursor, keys = scan(cursor, options)
+          keys.each(&block)
+          break if cursor == "0"
+        end
+      end
+
+      def sscan(key, cursor, options = {})
+        @sscan_provider.sscan(key, cursor, options)
+      end
+
+      def sscan_each(key, options = {}, &block)
+        return to_enum(:sscan_each, key, options) unless block_given?
+
+        cursor = "0"
+        loop do
+          cursor, values = sscan(key, cursor, options)
+          values.each(&block)
+          break if cursor == "0"
+        end
+      end
+
       def set(key, value)
         synchronize do |connection|
           reply = ::FFI::HiredisVip::Core.command(connection, "SET %b %b", :string, key, :size_t, key.size, :string, value, :size_t, value.size)
@@ -140,15 +251,16 @@ module FFI
       alias_method :[]=, :set
 
       def ttl(key)
+        reply = nil
         synchronize do |connection|
           reply = ::FFI::HiredisVip::Core.command(connection, "TTL %b", :string, key, :size_t, key.size)
+        end
 
-          case reply[:type] 
-          when :REDIS_REPLY_INTEGER
-            reply[:integer]
-          else
-            0
-          end
+        return nil if reply.nil? || reply.null?
+
+        case reply[:type] 
+        when :REDIS_REPLY_INTEGER
+          reply[:integer]
         end
       end
 
@@ -170,6 +282,10 @@ module FFI
         redis_info_parsed["redis_version"] && ::Gem::Version.new(redis_info_parsed["redis_version"]) >= ::Gem::Version.new("2.4.0")
       end
 
+      def redis_version_greater_than_2_8?
+        redis_info_parsed["redis_version"] && ::Gem::Version.new(redis_info_parsed["redis_version"]) >= ::Gem::Version.new("2.8.0")
+      end
+
       def set_exists_provider
         @exists_provider = case
                            when redis_version_3?
@@ -185,6 +301,24 @@ module FFI
                            ::FFI::HiredisVip::Sadd.new(self)
                          else
                            ::FFI::HiredisVip::SaddBefore24.new(self)
+                         end
+      end
+
+      def set_scan_provider
+        @scan_provider = case
+                         when redis_version_greater_than_2_8?
+                           ::FFI::HiredisVip::Scan.new(self)
+                         else
+                           ::FFI::HiredisVip::ScanBefore28.new(self)
+                         end
+      end
+
+      def set_sscan_provider
+        @sscan_provider = case
+                         when redis_version_greater_than_2_8?
+                           ::FFI::HiredisVip::Sscan.new(self)
+                         else
+                           ::FFI::HiredisVip::SscanBefore28.new(self)
                          end
       end
     end # class Client
