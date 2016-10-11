@@ -213,6 +213,20 @@ module FFI
         end
       end
 
+      def reconnect
+        reply = nil
+        synchronize do |connection|
+          reply = ::FFI::HiredisVip::Core.redisReconnect(connection)
+        end
+
+        case reply
+        when :REDIS_OK
+          true
+        else
+          false
+        end
+      end
+
       def sadd(key, *values)
         @sadd_provider.sadd(key, *values)
       end
