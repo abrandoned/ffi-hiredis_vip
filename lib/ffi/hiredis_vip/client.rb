@@ -50,6 +50,22 @@ module FFI
         end
       end
 
+      def decr(key)
+        reply = nil
+        synchronize do |connection|
+          reply = ::FFI::HiredisVip::Core.command(connection, "DECR %b", :string, key, :size_t, key.size)
+        end
+
+        return nil if reply.nil? || reply.null?
+
+        case reply[:type]
+        when :REDIS_REPLY_INTEGER
+          reply[:integer]
+        else
+          0
+        end
+      end
+
       def del(*keys)
         reply = nil
         keys = keys.flatten
@@ -179,16 +195,35 @@ module FFI
       end
       alias_method :[], :get
 
+      def incr(key)
+        reply = nil
+        synchronize do |connection|
+          reply = ::FFI::HiredisVip::Core.command(connection, "INCR %b", :string, key, :size_t, key.size)
+        end
+
+        return nil if reply.nil? || reply.null?
+
+        case reply[:type]
+        when :REDIS_REPLY_INTEGER
+          reply[:integer]
+        else
+          0
+        end
+      end
+
       def info
+        reply = nil
         synchronize do |connection|
           reply = ::FFI::HiredisVip::Core.command(connection, "INFO")
+        end
 
-          case reply[:type] 
-          when :REDIS_REPLY_STRING
-            reply[:str]
-          else
-            ""
-          end
+        return "" if reply.nil? || reply.null?
+
+        case reply[:type] 
+        when :REDIS_REPLY_STRING
+          reply[:str]
+        else
+          ""
         end
       end
 
