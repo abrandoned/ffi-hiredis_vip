@@ -17,7 +17,8 @@ describe ::FFI::HiredisVip::Client do
 
     it "returns associated expire when set" do
       @client.set("something", "something")
-      @client.expire("something", 10).must_equal true
+      @client.expire("something", 10).must_equal 1
+      @client.expire?("something", 10).must_equal true
       @client.ttl("something").must_equal 10
     end
 

@@ -94,7 +94,39 @@ module FFI
           reply = ::FFI::HiredisVip::Core.command(connection, "EXPIRE %b %b", :string, key, :size_t, key.size, :string, time_in_seconds, :size_t, time_in_seconds.size)
         end
 
-        return !reply.nil? && !reply.null? && reply[:type] == :REDIS_REPLY_INTEGER && reply[:integer] == 1
+        return 0 if reply.nil? || reply.null?
+
+        case reply[:type]
+        when :REDIS_REPLY_INTEGER
+          reply[:integer]
+        else
+          0
+        end
+      end
+
+      def expire?(key, seconds)
+        expire(key, seconds) == 1
+      end
+
+      def expireat(key, unix_time)
+        reply = nil
+        epoch = "#{unix_time}"
+        synchronize do |connection|
+          reply = ::FFI::HiredisVip::Core.command(connection, "EXPIREAT %b %b", :string, key, :size_t, key.size, :string, epoch, :size_t, epoch.size)
+        end
+
+        return 0 if reply.nil? || reply.null?
+
+        case reply[:type]
+        when :REDIS_REPLY_INTEGER
+          reply[:integer]
+        else
+          0
+        end
+      end
+
+      def expireat?(key, unix_time)
+        expireat(key, unix_time) == 1
       end
 
       def flushall
