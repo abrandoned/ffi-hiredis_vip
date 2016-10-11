@@ -2,6 +2,8 @@ require 'ffi/hiredis_vip'
 require 'ffi/hiredis_vip/info'
 require 'ffi/hiredis_vip/exists'
 require 'ffi/hiredis_vip/exists3'
+require 'ffi/hiredis_vip/persist'
+require 'ffi/hiredis_vip/persist_before_2_2'
 require 'ffi/hiredis_vip/sadd'
 require 'ffi/hiredis_vip/sadd_before_2_4'
 require 'ffi/hiredis_vip/scan'
@@ -24,6 +26,7 @@ module FFI
         super() # MonitorMixin#initialize
 
         set_exists_provider # Changed in Redis3
+        set_persist_provider # Added in Redis2.2
         set_sadd_provider # Changed in Redis2.4
         set_scan_provider # Introduced in Redis2.8
         set_sscan_provider # Introduced in Redis2.8
@@ -189,6 +192,14 @@ module FFI
         end
       end
 
+      def persist(key)
+        @persist_provider.persist(key)
+      end
+
+      def persist?(key)
+        persist(key) == 1 || ttl(key) == -1
+      end
+
       def ping
         synchronize do |connection|
           reply = ::FFI::HiredisVip::Core.command(connection, "PING")
@@ -278,6 +289,10 @@ module FFI
         redis_info_parsed["redis_version"] && redis_info_parsed["redis_version"].start_with?("3")
       end
 
+      def redis_version_greater_than_2_2?
+        redis_info_parsed["redis_version"] && ::Gem::Version.new(redis_info_parsed["redis_version"]) >= ::Gem::Version.new("2.2.0")
+      end
+
       def redis_version_greater_than_2_4?
         redis_info_parsed["redis_version"] && ::Gem::Version.new(redis_info_parsed["redis_version"]) >= ::Gem::Version.new("2.4.0")
       end
@@ -293,6 +308,15 @@ module FFI
                            else
                              ::FFI::HiredisVip::Exists.new(self)
                            end
+      end
+
+      def set_persist_provider
+        @persist_provider = case
+                            when redis_version_greater_than_2_2?
+                              ::FFI::HiredisVip::Persist.new(self)
+                            else
+                              ::FFI::HiredisVip::PersistBefore22.new(self)
+                            end
       end
 
       def set_sadd_provider
