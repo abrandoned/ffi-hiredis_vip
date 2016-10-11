@@ -33,7 +33,22 @@ module FFI
         mon_synchronize { yield(@connection) }
       end
 
+      def dbsize
+        reply = nil
+        synchronize do |connection|
+          reply = ::FFI::HiredisVip::Core.command(connection, "DBSIZE")
+        end
+
+        case reply[:type]
+        when :REDIS_REPLY_INTEGER
+          reply[:integer]
+        else
+          0
+        end
+      end
+
       def del(*keys)
+        reply = nil
         keys = keys.flatten
         key_size_pairs = []
         number_of_deletes = keys.size
@@ -43,13 +58,13 @@ module FFI
 
         synchronize do |connection|
           reply = ::FFI::HiredisVip::Core.command(connection, "DEL#{' %b' * number_of_deletes}", *key_size_pairs)
+        end
 
-          case reply[:type] 
-          when :REDIS_REPLY_INTEGER
-            reply[:integer]
-          else
-            0
-          end
+        case reply[:type]
+        when :REDIS_REPLY_INTEGER
+          reply[:integer]
+        else
+          0
         end
       end
 
