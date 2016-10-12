@@ -66,6 +66,23 @@ module FFI
         end
       end
 
+      def decrby(key, amount)
+        reply = nil
+        _amount = "#{amount}"
+        synchronize do |connection|
+          reply = ::FFI::HiredisVip::Core.command(connection, "DECRBY %b %b", :string, key, :size_t, key.size, :string, _amount, :size_t, _amount.size)
+        end
+
+        return nil if reply.nil? || reply.null?
+
+        case reply[:type]
+        when :REDIS_REPLY_INTEGER
+          reply[:integer]
+        else
+          0
+        end
+      end
+
       def del(*keys)
         reply = nil
         keys = keys.flatten
@@ -199,6 +216,23 @@ module FFI
         reply = nil
         synchronize do |connection|
           reply = ::FFI::HiredisVip::Core.command(connection, "INCR %b", :string, key, :size_t, key.size)
+        end
+
+        return nil if reply.nil? || reply.null?
+
+        case reply[:type]
+        when :REDIS_REPLY_INTEGER
+          reply[:integer]
+        else
+          0
+        end
+      end
+
+      def incrby(key, amount)
+        reply = nil
+        _amount = "#{amount}"
+        synchronize do |connection|
+          reply = ::FFI::HiredisVip::Core.command(connection, "INCRBY %b %b", :string, key, :size_t, key.size, :string, _amount, :size_t, _amount.size)
         end
 
         return nil if reply.nil? || reply.null?
