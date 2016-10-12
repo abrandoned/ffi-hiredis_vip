@@ -331,15 +331,18 @@ module FFI
       end
 
       def set(key, value)
+        reply = nil
         synchronize do |connection|
           reply = ::FFI::HiredisVip::Core.command(connection, "SET %b %b", :string, key, :size_t, key.size, :string, value, :size_t, value.size)
+        end
 
-          case reply[:type] 
-          when :REDIS_REPLY_STATUS
-            reply[:str] == OK
-          else
-            false
-          end
+        return false if reply.nil? || reply.null?
+
+        case reply[:type] 
+        when :REDIS_REPLY_STATUS
+          reply[:str] == OK
+        else
+          false
         end
       end
       alias_method :[]=, :set
@@ -422,11 +425,11 @@ module FFI
 
       def set_sscan_provider
         @sscan_provider = case
-                         when redis_version_greater_than_2_8?
-                           ::FFI::HiredisVip::Sscan.new(self)
-                         else
-                           ::FFI::HiredisVip::SscanBefore28.new(self)
-                         end
+                          when redis_version_greater_than_2_8?
+                            ::FFI::HiredisVip::Sscan.new(self)
+                          else
+                            ::FFI::HiredisVip::SscanBefore28.new(self)
+                          end
       end
     end # class Client
   end # module HiredisVip
