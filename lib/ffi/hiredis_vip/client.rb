@@ -382,16 +382,24 @@ module FFI
           reply = ::FFI::HiredisVip::Core.command(connection, "SET %b %b", :string, key, :size_t, key.size, :string, value, :size_t, value.size)
         end
 
-        return false if reply.nil? || reply.null?
+        return nil if reply.nil? || reply.null?
 
         case reply[:type] 
+        when :REDIS_REPLY_STRING
+          reply[:str]
         when :REDIS_REPLY_STATUS
-          reply[:str] == OK
+          reply[:str]
+        when :REDIS_REPLY_NIL
+          nil
         else
-          false
+          ""
         end
       end
       alias_method :[]=, :set
+
+      def set?(key, value)
+        set(key, value) == OK
+      end
 
       def ttl(key)
         reply = nil

@@ -11,8 +11,14 @@ describe ::FFI::HiredisVip::Client do
   end
 
   describe "#set" do
+    it "returns 'OK' when successful" do
+      @client.set("derp", "derp").must_equal "OK"
+    end
+  end
+
+  describe "#set?" do
     it "returns true when successful" do
-      @client.set("derp", "derp").must_equal true
+      @client.set?("derp", "derp").must_equal true
     end
   end
 end
