@@ -6,8 +6,14 @@ describe ::FFI::HiredisVip::Client do
   end
 
   describe "#ping" do
+    it "returns 'PONG' when server is present" do
+      @client.ping.must_equal "PONG"
+    end
+  end
+
+  describe "#ping?" do
     it "returns true when server is present" do
-      @client.ping.must_equal true
+      @client.ping?.must_equal true
     end
   end
 end

@@ -118,16 +118,25 @@ module FFI
       end
 
       def echo(value)
+        reply = nil
         synchronize do |connection|
           reply = ::FFI::HiredisVip::Core.command(connection, "ECHO %b", :string, value, :size_t, value.size)
-
-          case reply[:type] 
-          when :REDIS_REPLY_STRING
-            reply[:str]
-          else
-            nil
-          end
         end
+
+        return nil if reply.nil? || reply.null?
+
+        case reply[:type]
+        when :REDIS_REPLY_STRING
+          reply[:str]
+        when :REDIS_REPLY_NIL
+          nil
+        else
+          nil
+        end
+      end
+
+      def echo?(value)
+        echo(value) == value
       end
 
       def exists(*keys)
@@ -186,7 +195,18 @@ module FFI
           reply = ::FFI::HiredisVip::Core.command(connection, "FLUSHALL")
         end
 
-        return !reply.nil? && !reply.null? && reply[:type] == :REDIS_REPLY_STRING && reply[:str] == OK
+        return "" if reply.nil? || reply.null?
+
+        case reply[:type]
+        when :REDIS_REPLY_STRING
+          reply[:str]
+        else
+          ""
+        end
+      end
+
+      def flushall?
+        flushall == OK
       end
 
       def flushdb
@@ -195,19 +215,36 @@ module FFI
           reply = ::FFI::HiredisVip::Core.command(connection, "FLUSHDB")
         end
 
-        return !reply.nil? && !reply.null? && reply[:type] == :REDIS_REPLY_STRING && reply[:str] == OK
+        return "" if reply.nil? || reply.null?
+
+        case reply[:type]
+        when :REDIS_REPLY_STRING
+          reply[:str]
+        else
+          ""
+        end
+      end
+
+      def flushdb?
+        flushdb == OK
       end
 
       def get(key)
+        reply = nil
+
         synchronize do |connection|
           reply = ::FFI::HiredisVip::Core.command(connection, "GET %b", :string, key, :size_t, key.size)
+        end
 
-          case reply[:type] 
-          when :REDIS_REPLY_STRING
-            reply[:str]
-          else
-            nil
-          end
+        return nil if reply.nil? || reply.null?
+
+        case reply[:type]
+        when :REDIS_REPLY_STRING
+          reply[:str]
+        when :REDIS_REPLY_NIL
+          nil
+        else
+          nil # TODO: should this be empty string?
         end
       end
       alias_method :[], :get
@@ -270,16 +307,25 @@ module FFI
       end
 
       def ping
+        reply = nil
         synchronize do |connection|
           reply = ::FFI::HiredisVip::Core.command(connection, "PING")
-
-          case reply[:type] 
-          when :REDIS_REPLY_STATUS
-            reply[:str] == PONG
-          else
-            false
-          end
         end
+
+        return nil if reply.nil? || reply.null?
+
+        case reply[:type]
+        when :REDIS_REPLY_STATUS
+          reply[:str]
+        when :REDIS_REPLY_STRING
+          reply[:str]
+        else
+          ""
+        end
+      end
+
+      def ping?
+        ping == PONG
       end
 
       def reconnect
