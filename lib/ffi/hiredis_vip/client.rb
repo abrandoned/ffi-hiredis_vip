@@ -10,6 +10,8 @@ require 'ffi/hiredis_vip/scan'
 require 'ffi/hiredis_vip/scan_before_2_8'
 require 'ffi/hiredis_vip/sscan'
 require 'ffi/hiredis_vip/sscan_before_2_8'
+require 'ffi/hiredis_vip/touch'
+require 'ffi/hiredis_vip/touch_before_3_2_1'
 require 'monitor'
 
 module FFI
@@ -30,6 +32,7 @@ module FFI
         set_sadd_provider # Changed in Redis2.4
         set_scan_provider # Introduced in Redis2.8
         set_sscan_provider # Introduced in Redis2.8
+        set_touch_provider # Introduced in Redis3.2.1
       end
 
       def synchronize
@@ -95,6 +98,8 @@ module FFI
         synchronize do |connection|
           reply = ::FFI::HiredisVip::Core.command(connection, "DEL#{' %b' * number_of_deletes}", *key_size_pairs)
         end
+
+        return nil if reply.nil? || reply.null?
 
         case reply[:type]
         when :REDIS_REPLY_INTEGER
@@ -415,6 +420,10 @@ module FFI
         end
       end
 
+      def touch(*keys)
+        @touch_provider.touch(*keys)
+      end
+
       private
 
       def redis_info_parsed
@@ -422,23 +431,45 @@ module FFI
       end
 
       def redis_version_2?
-        redis_info_parsed["redis_version"] && redis_info_parsed["redis_version"].start_with?("2")
+        return @redis_version_2 unless @redis_version_2.nil?
+
+        @redis_version_2 = redis_info_parsed["redis_version"] &&
+                           redis_info_parsed["redis_version"].start_with?("2")
       end
 
       def redis_version_3?
-        redis_info_parsed["redis_version"] && redis_info_parsed["redis_version"].start_with?("3")
+        return @redis_version_3 unless @redis_version_3.nil?
+
+        @redis_version_3 = redis_info_parsed["redis_version"] &&
+                           redis_info_parsed["redis_version"].start_with?("3")
       end
 
       def redis_version_greater_than_2_2?
-        redis_info_parsed["redis_version"] && ::Gem::Version.new(redis_info_parsed["redis_version"]) >= ::Gem::Version.new("2.2.0")
+        return @redis_version_greater_than_2_2 unless @redis_version_greater_than_2_2.nil?
+
+        @redis_version_greater_than_2_2 = redis_info_parsed["redis_version"] &&
+                                          ::Gem::Version.new(redis_info_parsed["redis_version"]) >= ::Gem::Version.new("2.2.0")
       end
 
       def redis_version_greater_than_2_4?
-        redis_info_parsed["redis_version"] && ::Gem::Version.new(redis_info_parsed["redis_version"]) >= ::Gem::Version.new("2.4.0")
+        return @redis_version_greater_than_2_4 unless @redis_version_greater_than_2_4.nil?
+
+        @redis_version_greater_than_2_4 = redis_info_parsed["redis_version"] &&
+                                          ::Gem::Version.new(redis_info_parsed["redis_version"]) >= ::Gem::Version.new("2.4.0")
       end
 
       def redis_version_greater_than_2_8?
-        redis_info_parsed["redis_version"] && ::Gem::Version.new(redis_info_parsed["redis_version"]) >= ::Gem::Version.new("2.8.0")
+        return @redis_version_greater_than_2_8 unless @redis_version_greater_than_2_8.nil?
+
+        @redis_version_greater_than_2_8 = redis_info_parsed["redis_version"] &&
+                                          ::Gem::Version.new(redis_info_parsed["redis_version"]) >= ::Gem::Version.new("2.8.0")
+      end
+
+      def redis_version_greater_than_3_2_1?
+        return @redis_version_greater_than_3_2_1 unless @redis_version_greater_than_3_2_1.nil?
+
+        @redis_version_greater_than_3_2_1 = redis_info_parsed["redis_version"] &&
+                                            ::Gem::Version.new(redis_info_parsed["redis_version"]) >= ::Gem::Version.new("3.2.1")
       end
 
       def set_exists_provider
@@ -483,6 +514,15 @@ module FFI
                             ::FFI::HiredisVip::Sscan.new(self)
                           else
                             ::FFI::HiredisVip::SscanBefore28.new(self)
+                          end
+      end
+
+      def set_touch_provider
+        @touch_provider = case
+                          when redis_version_greater_than_3_2_1?
+                            ::FFI::HiredisVip::Touch.new(self)
+                          else
+                            ::FFI::HiredisVip::TouchBefore321.new(self)
                           end
       end
     end # class Client
