@@ -58,8 +58,10 @@ module FFI
 
       def decr(key)
         reply = nil
+        command = "DECR %b"
+        command_args = [ :string, key, :size_t, key.size ]
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, "DECR %b", :string, key, :size_t, key.size)
+          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
         end
 
         return nil if reply.nil? || reply.null?
@@ -75,8 +77,10 @@ module FFI
       def decrby(key, amount)
         reply = nil
         _amount = "#{amount}"
+        command = "DECRBY %b %b"
+        command_args = [ :string, key, :size_t, key.size, :string, _amount, :size_t, _amount.size ]
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, "DECRBY %b %b", :string, key, :size_t, key.size, :string, _amount, :size_t, _amount.size)
+          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
         end
 
         return nil if reply.nil? || reply.null?
@@ -92,14 +96,15 @@ module FFI
       def del(*keys)
         reply = nil
         keys = keys.flatten
-        key_size_pairs = []
         number_of_deletes = keys.size
+        command = "DEL#{' %b' * number_of_deletes}"
+        command_args = []
         keys.each do |key|
-          key_size_pairs << :string << key << :size_t << key.size
+          command_args << :string << key << :size_t << key.size
         end
 
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, "DEL#{' %b' * number_of_deletes}", *key_size_pairs)
+          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
         end
 
         return nil if reply.nil? || reply.null?
@@ -113,22 +118,29 @@ module FFI
       end
 
       def dump(key)
+        reply = nil
+        command = "DUMP %b"
+        command_args = [ :string, key, :size_t, key.size ]
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, "DUMP %b", :string, key, :size_t, key.size)
+          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
+        end
 
-          case reply[:type] 
-          when :REDIS_REPLY_STRING
-            reply[:str]
-          else
-            nil
-          end
+        return nil if reply.nil? || reply.null?
+
+        case reply[:type]
+        when :REDIS_REPLY_STRING
+          reply[:str]
+        else
+          nil
         end
       end
 
       def echo(value)
         reply = nil
+        command = "ECHO %b"
+        command_args = [ :string, value, :size_t, value.size ]
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, "ECHO %b", :string, value, :size_t, value.size)
+          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
         end
 
         return nil if reply.nil? || reply.null?
@@ -158,10 +170,13 @@ module FFI
       def expire(key, seconds)
         reply = nil
         time_in_seconds = "#{seconds}"
+        command = "EXPIRE %b %b"
+        command_args = [ :string, key, :size_t, key.size, :string, time_in_seconds, :size_t, time_in_seconds.size ]
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, "EXPIRE %b %b", :string, key, :size_t, key.size, :string, time_in_seconds, :size_t, time_in_seconds.size)
+          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
         end
 
+        # TODO: should we return a 0 here?
         return 0 if reply.nil? || reply.null?
 
         case reply[:type]
