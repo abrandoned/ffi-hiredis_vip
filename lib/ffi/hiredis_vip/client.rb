@@ -8,6 +8,8 @@ require 'ffi/hiredis_vip/sadd'
 require 'ffi/hiredis_vip/sadd_before_2_4'
 require 'ffi/hiredis_vip/scan'
 require 'ffi/hiredis_vip/scan_before_2_8'
+require 'ffi/hiredis_vip/set'
+require 'ffi/hiredis_vip/set_before_2_6_12'
 require 'ffi/hiredis_vip/sscan'
 require 'ffi/hiredis_vip/sscan_before_2_8'
 require 'ffi/hiredis_vip/touch'
@@ -31,6 +33,7 @@ module FFI
         set_persist_provider # Added in Redis2.2
         set_sadd_provider # Changed in Redis2.4
         set_scan_provider # Introduced in Redis2.8
+        set_set_provider # Changed in 2.6.12
         set_sscan_provider # Introduced in Redis2.8
         set_touch_provider # Introduced in Redis3.2.1
       end
@@ -333,6 +336,10 @@ module FFI
         ping == PONG
       end
 
+      def psetex(key, value, expiry)
+        @set_provider.psetex(key, value, expiry)
+      end
+
       def reconnect
         reply = nil
         synchronize do |connection|
@@ -381,29 +388,21 @@ module FFI
         end
       end
 
-      def set(key, value)
-        reply = nil
-        synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, "SET %b %b", :string, key, :size_t, key.size, :string, value, :size_t, value.size)
-        end
-
-        return nil if reply.nil? || reply.null?
-
-        case reply[:type] 
-        when :REDIS_REPLY_STRING
-          reply[:str]
-        when :REDIS_REPLY_STATUS
-          reply[:str]
-        when :REDIS_REPLY_NIL
-          nil
-        else
-          ""
-        end
+      def set(key, value, options = {})
+        @set_provider.set(key, value, options)
       end
       alias_method :[]=, :set
 
-      def set?(key, value)
-        set(key, value) == OK
+      def set?(key, value, options = {})
+        set(key, value, options) == OK
+      end
+
+      def setex(key, value, expiry)
+        @set_provider.setex(key, value, expiry)
+      end
+
+      def setnx(key, value)
+        @set_provider.setnx(key, value)
       end
 
       def ttl(key)
@@ -458,6 +457,13 @@ module FFI
                                           ::Gem::Version.new(redis_info_parsed["redis_version"]) >= ::Gem::Version.new("2.4.0")
       end
 
+      def redis_version_greater_than_2_6_12?
+        return @redis_version_greater_than_2_6_12 unless @redis_version_greater_than_2_6_12.nil?
+
+        @redis_version_greater_than_2_6_12 = redis_info_parsed["redis_version"] &&
+                                             ::Gem::Version.new(redis_info_parsed["redis_version"]) >= ::Gem::Version.new("2.6.12")
+      end
+
       def redis_version_greater_than_2_8?
         return @redis_version_greater_than_2_8 unless @redis_version_greater_than_2_8.nil?
 
@@ -506,6 +512,15 @@ module FFI
                          else
                            ::FFI::HiredisVip::ScanBefore28.new(self)
                          end
+      end
+
+      def set_set_provider
+        @set_provider = case
+                        when redis_version_greater_than_2_6_12?
+                          ::FFI::HiredisVip::Set.new(self)
+                        else
+                          ::FFI::HiredisVip::SetBefore2612.new(self)
+                        end
       end
 
       def set_sscan_provider
