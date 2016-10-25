@@ -1,7 +1,7 @@
 require 'ffi/hiredis_vip'
 require 'ffi/hiredis_vip/info'
 require 'ffi/hiredis_vip/exists'
-require 'ffi/hiredis_vip/exists3'
+require 'ffi/hiredis_vip/exists_before_3'
 require 'ffi/hiredis_vip/persist'
 require 'ffi/hiredis_vip/persist_before_2_2'
 require 'ffi/hiredis_vip/sadd'
@@ -496,9 +496,9 @@ module FFI
       def set_exists_provider
         @exists_provider = case
                            when redis_version_3?
-                             ::FFI::HiredisVip::Exists3.new(self)
-                           else
                              ::FFI::HiredisVip::Exists.new(self)
+                           else
+                             ::FFI::HiredisVip::ExistsBefore3.new(self)
                            end
       end
 
