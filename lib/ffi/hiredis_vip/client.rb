@@ -194,8 +194,10 @@ module FFI
       def expireat(key, unix_time)
         reply = nil
         epoch = "#{unix_time}"
+        command = "EXPIREAT %b %b"
+        command_args = [ :string, key, :size_t, key.size, :string, epoch, :size_t, epoch.size ]
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, "EXPIREAT %b %b", :string, key, :size_t, key.size, :string, epoch, :size_t, epoch.size)
+          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
         end
 
         return 0 if reply.nil? || reply.null?
@@ -254,9 +256,11 @@ module FFI
 
       def get(key)
         reply = nil
+        command = "GET %b"
+        command_args = [ :string, key, :size_t, key.size ]
 
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, "GET %b", :string, key, :size_t, key.size)
+          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
         end
 
         return nil if reply.nil? || reply.null?
@@ -274,8 +278,10 @@ module FFI
 
       def incr(key)
         reply = nil
+        command = "INCR %b"
+        command_args = [ :string, key, :size_t, key.size ]
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, "INCR %b", :string, key, :size_t, key.size)
+          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
         end
 
         return nil if reply.nil? || reply.null?
@@ -291,8 +297,10 @@ module FFI
       def incrby(key, amount)
         reply = nil
         _amount = "#{amount}"
+        command = "INCRBY %b %b"
+        command_args = [ :string, key, :size_t, key.size, :string, _amount, :size_t, _amount.size ]
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, "INCRBY %b %b", :string, key, :size_t, key.size, :string, _amount, :size_t, _amount.size)
+          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
         end
 
         return nil if reply.nil? || reply.null?
@@ -422,8 +430,10 @@ module FFI
 
       def ttl(key)
         reply = nil
+        command = "TTL %b"
+        command_args = [ :string, key, :size_t, key.size ]
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, "TTL %b", :string, key, :size_t, key.size)
+          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
         end
 
         return nil if reply.nil? || reply.null?
