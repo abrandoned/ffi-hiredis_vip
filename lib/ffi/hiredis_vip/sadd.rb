@@ -6,24 +6,37 @@ module FFI
       end
 
       def sadd(key, *values)
+        reply = nil
         values = values.flatten
-        value_size_pairs = []
         number_of_values = values.size
+        command = "SADD %b#{' %b' * number_of_values}"
+        command_args = [ :string, key, :size_t, key.size ]
         values.each do |value|
-          value_size_pairs << :string << value << :size_t << value.size
+          command_args << :string << value << :size_t << value.size
         end
 
-        @client.synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, "SADD %b#{' %b' * number_of_values}", :string, key, :size_t, key.size, *value_size_pairs)
+        synchronize do |connection|
+          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
+        end
 
-          case reply[:type] 
-          when :REDIS_REPLY_INTEGER
-            reply[:integer]
-          else
-            0
-          end
+        return nil if reply.nil? || reply.null?
+
+        case reply[:type] 
+        when :REDIS_REPLY_INTEGER
+          reply[:integer]
+        else
+          0
         end
       end
+
+      private
+
+      def synchronize
+        @client.synchronize do |connection|
+          yield(connection)
+        end
+      end
+
     end # class Sadd
   end # module HiredisVip
 end # module FFI
