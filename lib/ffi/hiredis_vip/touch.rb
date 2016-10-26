@@ -8,15 +8,18 @@ module FFI
       def touch(*keys)
         reply = nil
         keys = keys.flatten
-        key_size_pairs = []
         number_of_touches = keys.size
+        command = "TOUCH#{' %b' * number_of_touches}"
+        command_args = []
         keys.each do |key|
-          key_size_pairs << :string << key << :size_t << key.size
+          command_args << :string << key << :size_t << key.size
         end
 
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, "TOUCH#{' %b' * number_of_touches}", *key_size_pairs)
+          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
         end
+
+        return nil if reply.nil? || reply.null?
 
         case reply[:type]
         when :REDIS_REPLY_INTEGER

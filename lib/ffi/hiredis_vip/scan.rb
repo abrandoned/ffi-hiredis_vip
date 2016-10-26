@@ -7,8 +7,11 @@ module FFI
 
       def scan(cursor, options = {})
         reply = nil
-        @client.synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, "SCAN %b", :string, cursor, :size_t, cursor.size)
+        command = "SCAN %b"
+        command_args = [ :string, cursor, :size_t, cursor.size ]
+
+        synchronize do |connection|
+          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
         end
 
         return nil if reply.nil?
@@ -45,6 +48,12 @@ module FFI
           scan_results
         else
           raise "probs" # TODO: what do we do here
+        end
+      end
+
+      def synchronize
+        @client.synchronize do |connection|
+          yield(connection)
         end
       end
 
