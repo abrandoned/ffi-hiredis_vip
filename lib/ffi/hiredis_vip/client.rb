@@ -465,7 +465,15 @@ module FFI
         @scan_provider.supports_scan?
       end
 
+      def supports_scan_each?
+        @scan_provider.supports_scan?
+      end
+
       def supports_sscan?
+        @sscan_provider.supports_sscan?
+      end
+
+      def supports_sscan_each?
         @sscan_provider.supports_sscan?
       end
 
