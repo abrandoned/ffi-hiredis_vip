@@ -24,5 +24,10 @@ describe ::FFI::HiredisVip::Client do
       @client.set("something", "something")
       @client.mget("something", "derp").must_equal ["something", nil]
     end
+
+    it "returns array ordered by inputs of set value and nil if one key not defined" do
+      @client.set("something", "something")
+      @client.mget("something", "derp", "something").must_equal ["something", nil, "something"]
+    end
   end
 end
