@@ -35,5 +35,15 @@ describe ::FFI::HiredisVip::Client do
         ["derp", "derp2", "derp3"].must_include value
       end
     end
+
+    it "iterates through all keys currently in DB that match matcher" do
+      @client.set("derp", "something")
+      @client.set("derp2", "something")
+      @client.set("derp3", "something")
+
+      @client.scan_each(:match => "derp?") do |value|
+        ["derp2", "derp3"].must_include value
+      end
+    end
   end
 end

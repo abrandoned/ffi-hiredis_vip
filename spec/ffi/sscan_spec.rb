@@ -26,13 +26,27 @@ describe ::FFI::HiredisVip::Client do
   end
 
   describe "#sscan_each" do
-    it "iterates through all keys currently in DB" do
+    it "iterates through all values of a set currently in DB" do
       @client.sadd("derp", "something")
       @client.sadd("derp", "something2")
       @client.sadd("derp", "something3")
 
       @client.sscan_each("derp") do |value|
         ["something", "something2", "something3"].must_include value
+      end
+    end
+
+    it "iterates through all values currently in DB that match matcher" do
+      @client.sadd("derp", "something")
+      @client.sadd("derp", "something2")
+      @client.sadd("derp", "something3")
+
+      @client.sadd("derp2", "1something")
+      @client.sadd("derp2", "2something2")
+      @client.sadd("derp2", "3something3")
+
+      @client.sscan_each("derp?") do |value|
+        ["1something", "2something2", "3something3"].must_include value
       end
     end
   end
