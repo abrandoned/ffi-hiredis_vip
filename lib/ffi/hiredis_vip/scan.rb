@@ -10,6 +10,18 @@ module FFI
         command = "SCAN %b"
         command_args = [ :string, cursor, :size_t, cursor.size ]
 
+        if options[:match]
+          matcher = "#{options[:match]}"
+          command << " MATCH %b"
+          command_args << :string << matcher << :size_t << matcher.size
+        end
+
+        if options[:count]
+          count = "#{options[:count]}"
+          command << " COUNT %b"
+          command_args << :string << count << :size_t << count.size
+        end
+
         synchronize do |connection|
           reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
         end
