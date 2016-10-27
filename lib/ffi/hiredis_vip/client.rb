@@ -411,6 +411,29 @@ module FFI
         end
       end
 
+      def select(db)
+        reply = nil
+        db = "#{db}"
+        command = "SELECT %b"
+        command_args = [ :string, db, :size_t, db.size ]
+        synchronize do |connection|
+          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
+        end
+
+        return nil if reply.nil? || reply.null?
+
+        case reply[:type]
+        when :REDIS_REPLY_STATUS
+          reply[:str]
+        else
+          nil
+        end
+      end
+
+      def select?(db)
+        select(db) == OK
+      end
+
       def set(key, value, options = {})
         @set_provider.set(key, value, options)
       end
