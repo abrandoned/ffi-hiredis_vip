@@ -2,6 +2,7 @@ require 'ffi/hiredis_vip'
 require 'ffi/hiredis_vip/info'
 require 'ffi/hiredis_vip/exists'
 require 'ffi/hiredis_vip/exists_before_3'
+require 'ffi/hiredis_vip/mget'
 require 'ffi/hiredis_vip/persist'
 require 'ffi/hiredis_vip/persist_before_2_2'
 require 'ffi/hiredis_vip/sadd'
@@ -327,6 +328,11 @@ module FFI
         else
           ""
         end
+      end
+
+      def mget(*keys)
+        @mget_provider ||= ::FFI::HiredisVip::Mget.new(self)
+        @mget_provider.mget(*keys)
       end
 
       def persist(key)
