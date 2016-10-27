@@ -23,6 +23,10 @@ module FFI
         end
       end
 
+      def supports_sscan?
+        true
+      end
+
       private
 
       def scan_results_cursor(reply)

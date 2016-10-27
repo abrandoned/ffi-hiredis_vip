@@ -14,6 +14,11 @@ module FFI
             #{@client.info}
         SCAN_ERROR
       end
+
+      def supports_scan?
+        false
+      end
+
     end # class ScanBefore28
   end # module HiredisVip
 end # module FFI

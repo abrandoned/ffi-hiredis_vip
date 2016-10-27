@@ -14,6 +14,10 @@ module FFI
             #{@client.info}
         SCAN_ERROR
       end
+
+      def supports_persist?
+        false
+      end
     end # class PersistBefore22
   end # module HiredisVip
 end # module FFI

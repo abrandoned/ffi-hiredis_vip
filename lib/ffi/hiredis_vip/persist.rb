@@ -21,6 +21,10 @@ module FFI
         end
       end
 
+      def supports_persist?
+        true
+      end
+
       private
 
       def synchronize

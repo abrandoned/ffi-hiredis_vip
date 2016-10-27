@@ -14,6 +14,11 @@ module FFI
             #{@client.info}
         TOUCH_ERROR
       end
+
+      def supports_touch?
+        false
+      end
+
     end # class TouchBefore321
   end # module HiredisVip
 end # module FFI

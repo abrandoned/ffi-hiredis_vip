@@ -457,6 +457,22 @@ module FFI
         @set_provider.setnx(key, value)
       end
 
+      def supports_persist?
+        @persist_provider.supports_persist?
+      end
+
+      def supports_scan?
+        @scan_provider.supports_scan?
+      end
+
+      def supports_sscan?
+        @sscan_provider.supports_sscan?
+      end
+
+      def supports_touch?
+        @touch_provider.supports_touch?
+      end
+
       def ttl(key)
         reply = nil
         command = "TTL %b"

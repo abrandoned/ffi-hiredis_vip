@@ -6,14 +6,19 @@ module FFI
       end
 
       def sscan(key, cursor, options = {})
-        raise <<-SCAN_ERROR
-          SCAN Command in Redis is only available on Servers >= 2.8.0
+        raise <<-SSCAN_ERROR
+          SSCAN Command in Redis is only available on Servers >= 2.8.0
           The Redis Server you are connecting to is using a version that is not supported.
 
           == > INFO
             #{@client.info}
-        SCAN_ERROR
+        SSCAN_ERROR
       end
+
+      def supports_sscan?
+        false
+      end
+
     end # class SscanBefore28
   end # module HiredisVip
 end # module FFI

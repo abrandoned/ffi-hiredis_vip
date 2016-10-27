@@ -28,6 +28,11 @@ module FFI
           0
         end
       end
+
+      def supports_touch?
+        true
+      end
+
     end # class Touch
   end # module HiredisVip
 end # module FFI
