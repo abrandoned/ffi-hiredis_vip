@@ -30,7 +30,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_runtime_dependency "ffi"
-  spec.add_runtime_dependency "ffi-hiredis_vip-core", ">= 0.1.0.pre3"
+  spec.add_runtime_dependency "ffi-hiredis_vip-core", ">= 0.1.0.pre4"
 
   spec.add_development_dependency "bundler", "~> 1.13"
   spec.add_development_dependency "rake", "~> 10.0"
