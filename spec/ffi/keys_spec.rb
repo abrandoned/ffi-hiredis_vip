@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe ::FFI::HiredisVip::Client do
   before do
-    @client = ::FFI::HiredisVip::Client.new("127.0.0.1", 6379)
+    @client = ::FFI::HiredisVip::Client.new(:host => "127.0.0.1", :port => 6379)
     @client.del("derp")
   end
 
@@ -24,7 +24,10 @@ describe ::FFI::HiredisVip::Client do
       @client.set("something", "something")
       @client.set("something2", "something")
       @client.set("something3", "something")
-      @client.keys("something*").must_equal ["something", "something2", "something3"]
+
+      @client.keys("something*").each do |key|
+        ["something", "something2", "something3"].must_include key
+      end
     end
   end
 end

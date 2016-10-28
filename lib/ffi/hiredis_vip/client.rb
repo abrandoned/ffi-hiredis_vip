@@ -26,10 +26,16 @@ module FFI
       OK = "OK"
       PONG = "PONG"
 
-      def initialize(address, port)
-        @connection = ::FFI::HiredisVip::Core.connect(address, port)
+      def initialize(options = {})
+        database = options[:db]
+        host = options[:host]
+        port = options[:port].to_i
+
+        @connection = ::FFI::HiredisVip::Core.connect(host, port)
 
         super() # MonitorMixin#initialize
+
+        raise "Cannot select database specified" if database && !select?(database)
 
         set_exists_provider # Changed in Redis3
         set_persist_provider # Added in Redis2.2

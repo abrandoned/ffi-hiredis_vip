@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe ::FFI::HiredisVip::Client do
   before do
-    @client = ::FFI::HiredisVip::Client.new("127.0.0.1", 6379)
+    @client = ::FFI::HiredisVip::Client.new(:host => "127.0.0.1", :port => 6379)
     @client.del("derp", "something")
   end
 
