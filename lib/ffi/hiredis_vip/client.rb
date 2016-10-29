@@ -50,10 +50,14 @@ module FFI
         mon_synchronize { yield(@connection) }
       end
 
+      def execute_command(*args)
+        ::FFI::HiredisVip::Core.command(*args)
+      end
+
       def dbsize
         reply = nil
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, "DBSIZE")
+          reply = execute_command(connection, "DBSIZE")
         end
 
         case reply[:type]
@@ -69,7 +73,7 @@ module FFI
         command = "DECR %b"
         command_args = [ :string, key, :size_t, key.size ]
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
+          reply = execute_command(connection, command, *command_args)
         end
 
         return nil if reply.nil? || reply.null?
@@ -88,7 +92,7 @@ module FFI
         command = "DECRBY %b %b"
         command_args = [ :string, key, :size_t, key.size, :string, _amount, :size_t, _amount.size ]
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
+          reply = execute_command(connection, command, *command_args)
         end
 
         return nil if reply.nil? || reply.null?
@@ -112,7 +116,7 @@ module FFI
         end
 
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
+          reply = execute_command(connection, command, *command_args)
         end
 
         return nil if reply.nil? || reply.null?
@@ -130,7 +134,7 @@ module FFI
         command = "DUMP %b"
         command_args = [ :string, key, :size_t, key.size ]
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
+          reply = execute_command(connection, command, *command_args)
         end
 
         return nil if reply.nil? || reply.null?
@@ -148,7 +152,7 @@ module FFI
         command = "ECHO %b"
         command_args = [ :string, value, :size_t, value.size ]
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
+          reply = execute_command(connection, command, *command_args)
         end
 
         return nil if reply.nil? || reply.null?
@@ -181,7 +185,7 @@ module FFI
         command = "EXPIRE %b %b"
         command_args = [ :string, key, :size_t, key.size, :string, time_in_seconds, :size_t, time_in_seconds.size ]
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
+          reply = execute_command(connection, command, *command_args)
         end
 
         # TODO: should we return a 0 here?
@@ -205,7 +209,7 @@ module FFI
         command = "EXPIREAT %b %b"
         command_args = [ :string, key, :size_t, key.size, :string, epoch, :size_t, epoch.size ]
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
+          reply = execute_command(connection, command, *command_args)
         end
 
         return 0 if reply.nil? || reply.null?
@@ -225,7 +229,7 @@ module FFI
       def flushall
         reply = nil
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, "FLUSHALL")
+          reply = execute_command(connection, "FLUSHALL")
         end
 
         return "" if reply.nil? || reply.null?
@@ -245,7 +249,7 @@ module FFI
       def flushdb
         reply = nil
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, "FLUSHDB")
+          reply = execute_command(connection, "FLUSHDB")
         end
 
         return "" if reply.nil? || reply.null?
@@ -268,7 +272,7 @@ module FFI
         command_args = [ :string, key, :size_t, key.size ]
 
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
+          reply = execute_command(connection, command, *command_args)
         end
 
         return nil if reply.nil? || reply.null?
@@ -289,7 +293,7 @@ module FFI
         command = "INCR %b"
         command_args = [ :string, key, :size_t, key.size ]
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
+          reply = execute_command(connection, command, *command_args)
         end
 
         return nil if reply.nil? || reply.null?
@@ -308,7 +312,7 @@ module FFI
         command = "INCRBY %b %b"
         command_args = [ :string, key, :size_t, key.size, :string, _amount, :size_t, _amount.size ]
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
+          reply = execute_command(connection, command, *command_args)
         end
 
         return nil if reply.nil? || reply.null?
@@ -324,7 +328,7 @@ module FFI
       def info
         reply = nil
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, "INFO")
+          reply = execute_command(connection, "INFO")
         end
 
         return "" if reply.nil? || reply.null?
@@ -358,7 +362,7 @@ module FFI
       def ping
         reply = nil
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, "PING")
+          reply = execute_command(connection, "PING")
         end
 
         return nil if reply.nil? || reply.null?
@@ -435,7 +439,7 @@ module FFI
         command = "SELECT %b"
         command_args = [ :string, db, :size_t, db.size ]
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
+          reply = execute_command(connection, command, *command_args)
         end
 
         return nil if reply.nil? || reply.null?
@@ -498,7 +502,7 @@ module FFI
         command = "TTL %b"
         command_args = [ :string, key, :size_t, key.size ]
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
+          reply = execute_command(connection, command, *command_args)
         end
 
         return nil if reply.nil? || reply.null?

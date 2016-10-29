@@ -23,7 +23,7 @@ module FFI
         end
 
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
+          reply = @client.execute_command(connection, command, *command_args)
         end
 
         return nil if reply.nil? || reply.null?

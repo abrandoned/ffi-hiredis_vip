@@ -15,8 +15,8 @@ module FFI
           command_args << :string << key << :size_t << key.size
         end
 
-        @client.synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
+        synchronize do |connection|
+          reply = @client.execute_command(connection, command, *command_args)
         end
 
         return nil if reply.nil? || reply.null?
@@ -28,6 +28,15 @@ module FFI
           0
         end
       end
+
+      private
+
+      def synchronize
+        @client.synchronize do |connection|
+          yield(connection)
+        end
+      end
+
     end # class Exists
   end # module HiredisVip
 end # module FFI

@@ -12,7 +12,7 @@ module FFI
         command_args = [ :string, key, :size_t, key.size, :string, expiry, :size_t, expiry.size, :string, value, :size_t, value.size ]
 
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
+          reply = @client.execute_command(connection, command, *command_args)
         end
 
         return nil if reply.nil? || reply.null?
@@ -44,7 +44,7 @@ module FFI
         end
         
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
+          reply = @client.execute_command(connection, command, *command_args)
         end
 
         return nil if reply.nil? || reply.null?
@@ -68,7 +68,7 @@ module FFI
         command_args = [ :string, key, :size_t, key.size, :string, expiry, :size_t, expiry.size, :string, value, :size_t, value.size ]
 
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
+          reply = @client.execute_command(connection, command, *command_args)
         end
 
         return nil if reply.nil? || reply.null?
@@ -91,7 +91,7 @@ module FFI
         command_args = [ :string, key, :size_t, key.size, :string, value, :size_t, value.size ]
 
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
+          reply = @client.execute_command(connection, command, *command_args)
         end
 
         return nil if reply.nil? || reply.null?

@@ -12,7 +12,7 @@ module FFI
         command_args = [ :string, pattern, :size_t, pattern.size ]
 
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
+          reply = @client.execute_command(connection, command, *command_args)
         end
 
         return nil if reply.nil? || reply.null?

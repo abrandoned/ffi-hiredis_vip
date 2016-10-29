@@ -13,7 +13,7 @@ module FFI
         values.each do |value|
           command_args = [ :string, key, :size_t, key.size, :string, value, :size_t, value.size ]
           synchronize do |connection|
-            reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
+            reply = @client.execute_command(connection, command, *command_args)
 
             next if reply.nil? || reply.null?
 

@@ -10,7 +10,7 @@ module FFI
         command = "PERSIST %b"
         command_args = [ :string, key, :size_t, key.size ]
         synchronize do |connection|
-          reply = ::FFI::HiredisVip::Core.command(connection, command, *command_args)
+          reply = @client.execute_command(connection, command, *command_args)
         end
 
         return nil if reply.nil? || reply.null?
