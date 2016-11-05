@@ -12,6 +12,7 @@ module FFI
       def set(key, value, options = {})
         reply = nil
         command = "SET %b %b"
+        value = value.to_s
         command_args = [ :string, key, :size_t, key.size, :string, value, :size_t, value.size ]
 
         if options[:ex]
