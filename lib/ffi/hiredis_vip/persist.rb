@@ -8,7 +8,7 @@ module FFI
       def persist(key)
         reply = nil
         command = "PERSIST %b"
-        command_args = [ :string, key, :size_t, key.size ]
+        command_args = [ :pointer, key, :size_t, key.size ]
         synchronize do |connection|
           reply = @client.execute_command(connection, command, *command_args)
         end

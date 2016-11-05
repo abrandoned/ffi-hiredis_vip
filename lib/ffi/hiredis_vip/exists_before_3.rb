@@ -12,7 +12,7 @@ module FFI
 
         keys.each do |key|
           reply = nil
-          command_args = [ :string, key, :size_t, key.size ]
+          command_args = [ :pointer, key, :size_t, key.size ]
           @client.synchronize do |connection|
             reply = @client.execute_command(connection, command, *command_args)
           end

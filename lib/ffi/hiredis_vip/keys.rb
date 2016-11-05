@@ -9,7 +9,7 @@ module FFI
         reply = nil
         pattern = "#{pattern}"
         command = "KEYS %b"
-        command_args = [ :string, pattern, :size_t, pattern.size ]
+        command_args = [ :pointer, pattern, :size_t, pattern.size ]
 
         synchronize do |connection|
           reply = @client.execute_command(connection, command, *command_args)

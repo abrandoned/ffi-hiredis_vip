@@ -13,7 +13,7 @@ module FFI
         if options[:match]
           matcher = "#{options[:match]}"
           command << " MATCH %b"
-          command_args << :string << matcher << :size_t << matcher.size
+          command_args << :pointer << matcher << :size_t << matcher.size
         end
 
         if options[:count]

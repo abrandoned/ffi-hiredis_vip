@@ -12,7 +12,7 @@ module FFI
         command = "TOUCH#{' %b' * number_of_touches}"
         command_args = []
         keys.each do |key|
-          command_args << :string << key << :size_t << key.size
+          command_args << :pointer << key << :size_t << key.size
         end
 
         synchronize do |connection|

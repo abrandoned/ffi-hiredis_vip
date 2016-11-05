@@ -10,9 +10,9 @@ module FFI
         values = values.flatten
         number_of_values = values.size
         command = "SADD %b#{' %b' * number_of_values}"
-        command_args = [ :string, key, :size_t, key.size ]
+        command_args = [ :pointer, key, :size_t, key.size ]
         values.each do |value|
-          command_args << :string << value << :size_t << value.size
+          command_args << :pointer << value << :size_t << value.size
         end
 
         synchronize do |connection|

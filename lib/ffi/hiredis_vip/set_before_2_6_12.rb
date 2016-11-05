@@ -10,7 +10,7 @@ module FFI
         reply = nil
         value = value.to_s
         command = "PSETEX %b %b %b"
-        command_args = [ :string, key, :size_t, key.size, :string, expiry, :size_t, expiry.size, :string, value, :size_t, value.size ]
+        command_args = [ :pointer, key, :size_t, key.size, :string, expiry, :size_t, expiry.size, :pointer, value, :size_t, value.size ]
 
         synchronize do |connection|
           reply = @client.execute_command(connection, command, *command_args)
@@ -34,7 +34,7 @@ module FFI
         reply = nil
         value = value.to_s
         command = "SET %b %b"
-        command_args = [ :string, key, :size_t, key.size, :string, value, :size_t, value.size ]
+        command_args = [ :pointer, key, :size_t, key.size, :pointer, value, :size_t, value.size ]
 
         case
         when options[:ex]
@@ -68,7 +68,7 @@ module FFI
         reply = nil
         value = value.to_s
         command = "SETEX %b %b %b"
-        command_args = [ :string, key, :size_t, key.size, :string, expiry, :size_t, expiry.size, :string, value, :size_t, value.size ]
+        command_args = [ :pointer, key, :size_t, key.size, :string, expiry, :size_t, expiry.size, :pointer, value, :size_t, value.size ]
 
         synchronize do |connection|
           reply = @client.execute_command(connection, command, *command_args)
@@ -92,7 +92,7 @@ module FFI
         reply = nil
         value = value.to_s
         command = "SETNX %b %b"
-        command_args = [ :string, key, :size_t, key.size, :string, value, :size_t, value.size ]
+        command_args = [ :pointer, key, :size_t, key.size, :pointer, value, :size_t, value.size ]
 
         synchronize do |connection|
           reply = @client.execute_command(connection, command, *command_args)

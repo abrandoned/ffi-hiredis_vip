@@ -71,7 +71,7 @@ module FFI
       def decr(key)
         reply = nil
         command = "DECR %b"
-        command_args = [ :string, key, :size_t, key.size ]
+        command_args = [ :pointer, key, :size_t, key.size ]
         synchronize do |connection|
           reply = execute_command(connection, command, *command_args)
         end
@@ -90,7 +90,7 @@ module FFI
         reply = nil
         _amount = "#{amount}"
         command = "DECRBY %b %b"
-        command_args = [ :string, key, :size_t, key.size, :string, _amount, :size_t, _amount.size ]
+        command_args = [ :pointer, key, :size_t, key.size, :string, _amount, :size_t, _amount.size ]
         synchronize do |connection|
           reply = execute_command(connection, command, *command_args)
         end
@@ -112,7 +112,7 @@ module FFI
         command = "DEL#{' %b' * number_of_deletes}"
         command_args = []
         keys.each do |key|
-          command_args << :string << key << :size_t << key.size
+          command_args << :pointer << key << :size_t << key.size
         end
 
         synchronize do |connection|
@@ -132,7 +132,7 @@ module FFI
       def dump(key)
         reply = nil
         command = "DUMP %b"
-        command_args = [ :string, key, :size_t, key.size ]
+        command_args = [ :pointer, key, :size_t, key.size ]
         synchronize do |connection|
           reply = execute_command(connection, command, *command_args)
         end
@@ -150,7 +150,7 @@ module FFI
       def echo(value)
         reply = nil
         command = "ECHO %b"
-        command_args = [ :string, value, :size_t, value.size ]
+        command_args = [ :pointer, value, :size_t, value.size ]
         synchronize do |connection|
           reply = execute_command(connection, command, *command_args)
         end
@@ -183,7 +183,7 @@ module FFI
         reply = nil
         time_in_seconds = "#{seconds}"
         command = "EXPIRE %b %b"
-        command_args = [ :string, key, :size_t, key.size, :string, time_in_seconds, :size_t, time_in_seconds.size ]
+        command_args = [ :pointer, key, :size_t, key.size, :string, time_in_seconds, :size_t, time_in_seconds.size ]
         synchronize do |connection|
           reply = execute_command(connection, command, *command_args)
         end
@@ -207,7 +207,7 @@ module FFI
         reply = nil
         epoch = "#{unix_time}"
         command = "EXPIREAT %b %b"
-        command_args = [ :string, key, :size_t, key.size, :string, epoch, :size_t, epoch.size ]
+        command_args = [ :pointer, key, :size_t, key.size, :string, epoch, :size_t, epoch.size ]
         synchronize do |connection|
           reply = execute_command(connection, command, *command_args)
         end
@@ -269,7 +269,7 @@ module FFI
       def get(key)
         reply = nil
         command = "GET %b"
-        command_args = [ :string, key, :size_t, key.size ]
+        command_args = [ :pointer, key, :size_t, key.size ]
 
         synchronize do |connection|
           reply = execute_command(connection, command, *command_args)
@@ -291,7 +291,7 @@ module FFI
       def incr(key)
         reply = nil
         command = "INCR %b"
-        command_args = [ :string, key, :size_t, key.size ]
+        command_args = [ :pointer, key, :size_t, key.size ]
         synchronize do |connection|
           reply = execute_command(connection, command, *command_args)
         end
@@ -310,7 +310,7 @@ module FFI
         reply = nil
         _amount = "#{amount}"
         command = "INCRBY %b %b"
-        command_args = [ :string, key, :size_t, key.size, :string, _amount, :size_t, _amount.size ]
+        command_args = [ :pointer, key, :size_t, key.size, :string, _amount, :size_t, _amount.size ]
         synchronize do |connection|
           reply = execute_command(connection, command, *command_args)
         end
@@ -500,7 +500,7 @@ module FFI
       def ttl(key)
         reply = nil
         command = "TTL %b"
-        command_args = [ :string, key, :size_t, key.size ]
+        command_args = [ :pointer, key, :size_t, key.size ]
         synchronize do |connection|
           reply = execute_command(connection, command, *command_args)
         end
