@@ -11,16 +11,22 @@ module FFI
         command = "SADD %b %b"
 
         values.each do |value|
-          command_args = [ :string, key, :size_t, key.size, :string, value, :size_t, value.size ]
-          synchronize do |connection|
-            reply = @client.execute_command(connection, command, *command_args)
+          begin
+            reply = nil
+            value = value.to_s
+            command_args = [ :pointer, key, :size_t, key.size, :pointer, value, :size_t, value.size ]
+            synchronize do |connection|
+              reply = @client.execute_command(connection, command, *command_args)
 
-            next if reply.nil? || reply.null?
+              next if reply.nil? || reply.null?
 
-            case reply[:type] 
-            when :REDIS_REPLY_INTEGER
-              number_added_to_set = number_added_to_set + reply[:integer]
+              case reply[:type] 
+              when :REDIS_REPLY_INTEGER
+                number_added_to_set = number_added_to_set + reply[:integer]
+              end
             end
+          ensure
+            ::FFI::HiredisVip::Core.freeReplyObject(reply.pointer) if reply
           end
         end
 

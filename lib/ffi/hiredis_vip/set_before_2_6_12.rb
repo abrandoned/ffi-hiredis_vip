@@ -20,14 +20,16 @@ module FFI
 
         case reply[:type] 
         when :REDIS_REPLY_STRING
-          reply[:str]
+          reply[:str].dup
         when :REDIS_REPLY_STATUS
-          reply[:str]
+          reply[:str].dup
         when :REDIS_REPLY_NIL
           nil
         else
           ""
         end
+      ensure
+        ::FFI::HiredisVip::Core.freeReplyObject(reply.pointer) if reply
       end
 
       def set(key, value, options = {})
@@ -53,14 +55,16 @@ module FFI
 
         case reply[:type] 
         when :REDIS_REPLY_STRING
-          reply[:str]
+          reply[:str].dup
         when :REDIS_REPLY_STATUS
-          reply[:str]
+          reply[:str].dup
         when :REDIS_REPLY_NIL
           nil
         else
           ""
         end
+      ensure
+        ::FFI::HiredisVip::Core.freeReplyObject(reply) if reply
       end
 
       def setex(key, value, expiry)
@@ -78,14 +82,16 @@ module FFI
 
         case reply[:type] 
         when :REDIS_REPLY_STRING
-          reply[:str]
+          reply[:str].dup
         when :REDIS_REPLY_STATUS
-          reply[:str]
+          reply[:str].dup
         when :REDIS_REPLY_NIL
           nil
         else
           ""
         end
+      ensure
+        ::FFI::HiredisVip::Core.freeReplyObject(reply) if reply
       end
 
       def setnx(key, value)
@@ -102,14 +108,16 @@ module FFI
 
         case reply[:type] 
         when :REDIS_REPLY_STRING
-          reply[:str]
+          reply[:str].dup
         when :REDIS_REPLY_STATUS
-          reply[:str]
+          reply[:str].dup
         when :REDIS_REPLY_NIL
           nil
         else
           ""
         end
+      ensure
+        ::FFI::HiredisVip::Core.freeReplyObject(reply) if reply
       end
 
       private

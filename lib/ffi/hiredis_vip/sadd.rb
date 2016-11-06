@@ -12,6 +12,7 @@ module FFI
         command = "SADD %b#{' %b' * number_of_values}"
         command_args = [ :pointer, key, :size_t, key.size ]
         values.each do |value|
+          value = value.to_s
           command_args << :pointer << value << :size_t << value.size
         end
 
@@ -27,6 +28,8 @@ module FFI
         else
           0
         end
+      ensure
+        ::FFI::HiredisVip::Core.freeReplyObject(reply.pointer) if reply
       end
 
       private

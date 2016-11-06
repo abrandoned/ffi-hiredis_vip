@@ -24,6 +24,8 @@ module FFI
         else
           []
         end
+      ensure
+        ::FFI::HiredisVip::Core.freeReplyObject(reply.pointer) if reply
       end
 
       private
@@ -36,7 +38,7 @@ module FFI
 
           case result[:type]
           when :REDIS_REPLY_STRING
-            keys_results << result[:str]
+            keys_results << result[:str].dup
           end
         end
 

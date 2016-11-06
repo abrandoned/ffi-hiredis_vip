@@ -66,6 +66,8 @@ module FFI
         else
           0
         end
+      ensure
+        ::FFI::HiredisVip::Core.freeReplyObject(reply.pointer) if reply
       end
 
       def decr(key)
@@ -84,6 +86,8 @@ module FFI
         else
           0
         end
+      ensure
+        ::FFI::HiredisVip::Core.freeReplyObject(reply.pointer) if reply
       end
 
       def decrby(key, amount)
@@ -103,6 +107,8 @@ module FFI
         else
           0
         end
+      ensure
+        ::FFI::HiredisVip::Core.freeReplyObject(reply.pointer) if reply
       end
 
       def del(*keys)
@@ -127,6 +133,8 @@ module FFI
         else
           0
         end
+      ensure
+        ::FFI::HiredisVip::Core.freeReplyObject(reply.pointer) if reply
       end
 
       def dump(key)
@@ -141,10 +149,12 @@ module FFI
 
         case reply[:type]
         when :REDIS_REPLY_STRING
-          reply[:str]
+          reply[:str].dup
         else
           nil
         end
+      ensure
+        ::FFI::HiredisVip::Core.freeReplyObject(reply.pointer) if reply
       end
 
       def echo(value)
@@ -159,12 +169,14 @@ module FFI
 
         case reply[:type]
         when :REDIS_REPLY_STRING
-          reply[:str]
+          reply[:str].dup
         when :REDIS_REPLY_NIL
           nil
         else
           nil
         end
+      ensure
+        ::FFI::HiredisVip::Core.freeReplyObject(reply.pointer) if reply
       end
 
       def echo?(value)
@@ -197,6 +209,8 @@ module FFI
         else
           0
         end
+      ensure
+        ::FFI::HiredisVip::Core.freeReplyObject(reply.pointer) if reply
       end
 
       def expire?(key, seconds)
@@ -220,6 +234,8 @@ module FFI
         else
           0
         end
+      ensure
+        ::FFI::HiredisVip::Core.freeReplyObject(reply.pointer) if reply
       end
 
       def expireat?(key, unix_time)
@@ -236,10 +252,12 @@ module FFI
 
         case reply[:type]
         when :REDIS_REPLY_STRING
-          reply[:str]
+          reply[:str].dup
         else
           ""
         end
+      ensure
+        ::FFI::HiredisVip::Core.freeReplyObject(reply.pointer) if reply
       end
 
       def flushall?
@@ -256,10 +274,12 @@ module FFI
 
         case reply[:type]
         when :REDIS_REPLY_STRING
-          reply[:str]
+          reply[:str].dup
         else
           ""
         end
+      ensure
+        ::FFI::HiredisVip::Core.freeReplyObject(reply.pointer) if reply
       end
 
       def flushdb?
@@ -279,12 +299,14 @@ module FFI
 
         case reply[:type]
         when :REDIS_REPLY_STRING
-          reply[:str]
+          reply[:str].dup
         when :REDIS_REPLY_NIL
           nil
         else
           nil # TODO: should this be empty string?
         end
+      ensure
+        ::FFI::HiredisVip::Core.freeReplyObject(reply.pointer) if reply
       end
       alias_method :[], :get
 
@@ -304,6 +326,8 @@ module FFI
         else
           0
         end
+      ensure
+        ::FFI::HiredisVip::Core.freeReplyObject(reply.pointer) if reply
       end
 
       def incrby(key, amount)
@@ -323,6 +347,8 @@ module FFI
         else
           0
         end
+      ensure
+        ::FFI::HiredisVip::Core.freeReplyObject(reply.pointer) if reply
       end
 
       def info
@@ -335,10 +361,12 @@ module FFI
 
         case reply[:type] 
         when :REDIS_REPLY_STRING
-          reply[:str]
+          reply[:str].dup
         else
           ""
         end
+      ensure
+        ::FFI::HiredisVip::Core.freeReplyObject(reply.pointer) if reply
       end
 
       def keys(pattern)
@@ -369,12 +397,14 @@ module FFI
 
         case reply[:type]
         when :REDIS_REPLY_STATUS
-          reply[:str]
+          reply[:str].dup
         when :REDIS_REPLY_STRING
-          reply[:str]
+          reply[:str].dup
         else
           ""
         end
+      ensure
+        ::FFI::HiredisVip::Core.freeReplyObject(reply.pointer) if reply
       end
 
       def ping?
@@ -397,6 +427,8 @@ module FFI
         else
           false
         end
+      ensure
+        ::FFI::HiredisVip::Core.freeReplyObject(reply.pointer) if reply
       end
 
       def sadd(key, *values)
@@ -446,10 +478,12 @@ module FFI
 
         case reply[:type]
         when :REDIS_REPLY_STATUS
-          reply[:str]
+          reply[:str].dup
         else
           nil
         end
+      ensure
+        ::FFI::HiredisVip::Core.freeReplyObject(reply.pointer) if reply
       end
 
       def select?(db)
@@ -511,6 +545,8 @@ module FFI
         when :REDIS_REPLY_INTEGER
           reply[:integer]
         end
+      ensure
+        ::FFI::HiredisVip::Core.freeReplyObject(reply.pointer) if reply
       end
 
       def touch(*keys)

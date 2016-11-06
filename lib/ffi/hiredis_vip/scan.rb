@@ -33,6 +33,8 @@ module FFI
         when :REDIS_REPLY_ARRAY
           [ scan_results_cursor(reply), scan_results_to_array(reply) ]
         end
+      ensure
+        ::FFI::HiredisVip::Core.freeReplyObject(reply.pointer) if reply
       end
 
       def supports_scan?
@@ -45,7 +47,7 @@ module FFI
         zeroth_result = ::FFI::HiredisVip::Core.redisReplyElement(reply, 0)
 
         if !zeroth_result.null? && zeroth_result[:type] == :REDIS_REPLY_STRING
-          zeroth_result[:str]
+          zeroth_result[:str].dup
         else
           raise "probs" # TODO: what do we do here
         end
@@ -58,7 +60,7 @@ module FFI
         if !array_reply.null? && array_reply[:type] == :REDIS_REPLY_ARRAY
           0.upto(array_reply[:elements] - 1) do |element_number|
             result = ::FFI::HiredisVip::Core.redisReplyElement(array_reply, element_number)
-            scan_results << result[:str] if result[:type] == :REDIS_REPLY_STRING
+            scan_results << result[:str].dup if result[:type] == :REDIS_REPLY_STRING
           end
 
           scan_results

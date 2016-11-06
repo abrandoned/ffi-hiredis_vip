@@ -11,17 +11,21 @@ module FFI
         command = "EXISTS %b"
 
         keys.each do |key|
-          reply = nil
-          command_args = [ :pointer, key, :size_t, key.size ]
-          @client.synchronize do |connection|
-            reply = @client.execute_command(connection, command, *command_args)
-          end
+          begin
+            reply = nil
+            command_args = [ :pointer, key, :size_t, key.size ]
+            @client.synchronize do |connection|
+              reply = @client.execute_command(connection, command, *command_args)
+            end
 
-          next if reply.nil? || reply.null?
+            next if reply.nil? || reply.null?
 
-          case reply[:type] 
-          when :REDIS_REPLY_INTEGER
-            number_of_exists = number_of_exists + reply[:integer]
+            case reply[:type] 
+            when :REDIS_REPLY_INTEGER
+              number_of_exists = number_of_exists + reply[:integer]
+            end
+          ensure
+            ::FFI::HiredisVip::Core.freeReplyObject(reply.pointer) if reply
           end
         end
 

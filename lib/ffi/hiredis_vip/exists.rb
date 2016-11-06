@@ -27,6 +27,8 @@ module FFI
         else
           0
         end
+      ensure
+        ::FFI::HiredisVip::Core.freeReplyObject(reply.pointer) if reply
       end
 
       private

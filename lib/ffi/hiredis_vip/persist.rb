@@ -19,6 +19,8 @@ module FFI
         when :REDIS_REPLY_INTEGER
           reply[:integer]
         end
+      ensure
+        ::FFI::HiredisVip::Core.freeReplyObject(reply.pointer) if reply
       end
 
       def supports_persist?

@@ -38,14 +38,16 @@ module FFI
 
         case reply[:type] 
         when :REDIS_REPLY_STRING
-          reply[:str]
+          reply[:str].dup
         when :REDIS_REPLY_STATUS
-          reply[:str]
+          reply[:str].dup
         when :REDIS_REPLY_NIL
           nil
         else
           ""
         end
+      ensure
+        ::FFI::HiredisVip::Core.freeReplyObject(reply.pointer) if reply
       end
 
       def setex(key, value, expiry)
