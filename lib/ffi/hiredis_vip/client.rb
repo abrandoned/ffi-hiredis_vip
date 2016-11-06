@@ -27,15 +27,10 @@ module FFI
       PONG = "PONG"
 
       def initialize(options = {})
-        database = options[:db]
-        host = options[:host]
-        port = options[:port].to_i
-
-        @connection = ::FFI::HiredisVip::Core.connect(host, port)
-
         super() # MonitorMixin#initialize
 
-        raise "Cannot select database specified" if database && !select?(database)
+        set_connection(options)
+        set_database(options)
 
         set_exists_provider # Changed in Redis3
         set_persist_provider # Added in Redis2.2
@@ -606,6 +601,18 @@ module FFI
 
         @redis_version_greater_than_3_2_1 = redis_info_parsed["redis_version"] &&
                                             ::Gem::Version.new(redis_info_parsed["redis_version"]) >= ::Gem::Version.new("3.2.1")
+      end
+
+      def set_connection(options = {})
+        host = options[:host] || "localhost"
+        port = (options[:port] || 6379).to_i
+
+        @connection = ::FFI::HiredisVip::Core.connect(host, port)
+      end
+
+      def set_database(options = {})
+        database = options[:db]
+        raise "Cannot select database specified" if database && !select?(database)
       end
 
       def set_exists_provider
